@@ -4,14 +4,9 @@ from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu
 
+from .ajustes_dialog import AjustesDialog
 from .catastro_maptool import CatastroClickTool
 from .panel import CatastrofePanel
-from .settings import (
-    mostrar_acuifero,
-    mostrar_zona_inundable,
-    set_mostrar_acuifero,
-    set_mostrar_zona_inundable,
-)
 
 
 class CatastrofePlugin:
@@ -23,6 +18,7 @@ class CatastrofePlugin:
         self.previous_tool = None
         self.panel = None
         self.panel_action = None
+        self.ajustes_dialog = None
 
     def initGui(self):
         icon_path = os.path.join(os.path.dirname(__file__), "icon.svg")
@@ -44,22 +40,13 @@ class CatastrofePlugin:
         self.panel_action.setText("Buscar parcela")
         self.iface.addToolBarIcon(self.panel_action)
 
-        ajustes_menu = QMenu("Ajustes", self.iface.mainWindow())
-        self.accion_acuifero = QAction("Mostrar acuífero (agua subterránea)", ajustes_menu)
-        self.accion_acuifero.setCheckable(True)
-        self.accion_acuifero.setChecked(mostrar_acuifero())
-        self.accion_acuifero.toggled.connect(set_mostrar_acuifero)
-        self.accion_zona_inundable = QAction("Mostrar zona inundable / dominio público hidráulico", ajustes_menu)
-        self.accion_zona_inundable.setCheckable(True)
-        self.accion_zona_inundable.setChecked(mostrar_zona_inundable())
-        self.accion_zona_inundable.toggled.connect(set_mostrar_zona_inundable)
-        ajustes_menu.addAction(self.accion_acuifero)
-        ajustes_menu.addAction(self.accion_zona_inundable)
+        self.accion_ajustes = QAction("Ajustes…", self.iface.mainWindow())
+        self.accion_ajustes.triggered.connect(self.abrir_ajustes)
 
         self.menu = QMenu("Catastrofe", self.iface.mainWindow())
         self.menu.addAction(self.action)
         self.menu.addAction(self.panel_action)
-        self.menu.addMenu(ajustes_menu)
+        self.menu.addAction(self.accion_ajustes)
         self.iface.pluginMenu().addMenu(self.menu)
 
         self.map_tool = CatastroClickTool(self.iface.mapCanvas(), self.iface)
@@ -75,12 +62,22 @@ class CatastrofePlugin:
         self.iface.removeDockWidget(self.panel)
         self.panel = None
         self.panel_action = None
+        if self.ajustes_dialog is not None:
+            self.ajustes_dialog.close()
+            self.ajustes_dialog = None
         self.menu = None
         self.map_tool = None
         self.action = None
 
     def activar_herramienta_clic(self):
         self.action.setChecked(True)
+
+    def abrir_ajustes(self):
+        if self.ajustes_dialog is None:
+            self.ajustes_dialog = AjustesDialog(self.iface.mainWindow())
+        self.ajustes_dialog.show()
+        self.ajustes_dialog.raise_()
+        self.ajustes_dialog.activateWindow()
 
     def toggle_tool(self, checked):
         if checked:

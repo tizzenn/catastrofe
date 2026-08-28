@@ -27,6 +27,7 @@ from .catastro_service import (
     refcats_en_poligono_parcela,
 )
 from .hidro_info import resumen_hidrico
+from . import settings
 
 WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
 
@@ -138,9 +139,19 @@ class CatastrofePanel(QDockWidget):
         if self.rubber_band is not None:
             canvas.scene().removeItem(self.rubber_band)
         self.rubber_band = QgsRubberBand(canvas, geometria.type())
-        self.rubber_band.setStrokeColor(QColor(224, 112, 32, 255))
-        self.rubber_band.setFillColor(QColor(0, 0, 0, 0))
-        self.rubber_band.setWidth(3)
+
+        color_borde = settings.color_borde()
+        color_borde.setAlpha(255)
+        self.rubber_band.setStrokeColor(color_borde)
+        self.rubber_band.setWidth(settings.ancho_borde())
+
+        if settings.relleno_activado():
+            color_relleno = settings.color_relleno()
+            color_relleno.setAlpha(round(settings.opacidad_relleno() * 255 / 100))
+        else:
+            color_relleno = QColor(0, 0, 0, 0)
+        self.rubber_band.setFillColor(color_relleno)
+
         if geometria.type() == QgsWkbTypes.PointGeometry:
             self.rubber_band.setIcon(QgsRubberBand.ICON_CIRCLE)
             self.rubber_band.setIconSize(14)

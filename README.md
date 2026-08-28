@@ -52,10 +52,17 @@ aplica:
 
 Es el único dato hídrico que estos servicios ofrecen de forma abierta y sin
 login para toda España (incluidas cuencas intracomunitarias); no hay dato
-público de concesiones de agua ni de comunidades de regantes. Cada aviso se
-puede activar o desactivar por separado en **Catastrofe → Ajustes**
-(persistente entre sesiones de QGIS; con ambos desactivados no se hace
-ninguna consulta extra al MITECO).
+público de concesiones de agua ni de comunidades de regantes.
+
+**Ajustes (menú Catastrofe → Ajustes…):**
+- Activar/desactivar el aviso de acuífero y el de zona inundable por
+  separado (con ambos desactivados no se hace ninguna consulta extra al
+  MITECO).
+- Estilo del resaltado de la parcela en el mapa: color y ancho del borde,
+  y sombreado interior opcional (activarlo, color y opacidad).
+
+Todo se guarda al momento (sin botón de guardar) y persiste entre sesiones
+de QGIS.
 
 **Limitación conocida:** el servicio del Catastro no cubre País Vasco ni
 Navarra (tienen catastro foral propio, con sus propias sedes).
