@@ -1,6 +1,6 @@
 import webbrowser
 
-from qgis.core import QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
+from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
 from qgis.gui import QgsMapTool
 from qgis.PyQt.QtCore import Qt
 
@@ -32,7 +32,9 @@ class CatastroClickTool(QgsMapTool):
             self.iface.messageBar().pushWarning("Catastro", f"Coordenadas no válidas: {exc}")
             return
 
-        self.iface.messageBar().pushMessage("Catastro", "Consultando parcela…", level=0, duration=2)
+        self.iface.messageBar().pushMessage(
+            "Catastro", "Consultando parcela…", level=Qgis.MessageLevel.Info, duration=2
+        )
         try:
             url = url_sedecatastro_para_punto(point_wgs84.x(), point_wgs84.y())
         except CatastroLookupError as exc:
