@@ -1,6 +1,7 @@
 [general]
 name=Catastrofe
 qgisMinimumVersion=3.16
+qgisMaximumVersion=4.99
 description=Al pulsar una parcela en el mapa, abre su ficha en la Sede Electrónica del Catastro.
 version=0.1
 author=Rober (tizzenn)
