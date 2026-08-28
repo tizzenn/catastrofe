@@ -4,8 +4,9 @@ from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform
 from qgis.gui import QgsMapTool
 from qgis.PyQt.QtCore import Qt
 
-from .catastro_service import CatastroLookupError, url_sedecatastro_para_punto
+from .catastro_service import CatastroLookupError, datos_sedecatastro_para_punto
 from .hidro_info import resumen_hidrico
+from .natura_info import resumen_red_natura
 
 WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
 
@@ -36,13 +37,18 @@ class CatastroClickTool(QgsMapTool):
             "Catastro", "Consultando parcela…", level=Qgis.MessageLevel.Info, duration=2
         )
         try:
-            url = url_sedecatastro_para_punto(point_wgs84.x(), point_wgs84.y())
+            datos = datos_sedecatastro_para_punto(point_wgs84.x(), point_wgs84.y())
         except CatastroLookupError as exc:
             self.iface.messageBar().pushWarning("Catastro", str(exc))
             return
 
-        webbrowser.open(url)
+        webbrowser.open(datos["url"])
 
-        resumen = resumen_hidrico(point_wgs84.x(), point_wgs84.y())
+        partes = [
+            f"Naturaleza: {datos['naturaleza']}" if datos["naturaleza"] else "",
+            resumen_hidrico(point_wgs84.x(), point_wgs84.y()),
+            resumen_red_natura(point_wgs84.x(), point_wgs84.y()),
+        ]
+        resumen = " · ".join(p for p in partes if p)
         if resumen:
             self.iface.messageBar().pushInfo("Catastrofe", resumen)

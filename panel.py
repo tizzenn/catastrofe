@@ -22,11 +22,13 @@ from qgis.PyQt.QtWidgets import (
 from .catastro_service import (
     CatastroLookupError,
     geometria_parcela,
+    naturaleza_parcela,
     normalizar_referencia,
     punto_de_referencia,
     refcats_en_poligono_parcela,
 )
 from .hidro_info import resumen_hidrico
+from .natura_info import resumen_red_natura
 from . import settings
 
 WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
@@ -107,9 +109,19 @@ class CatastrofePanel(QDockWidget):
             return
         self.activar_herramienta_clic()
 
-        resumen = resumen_hidrico(lon, lat)
-        partes = [p for p in [aviso, "Parcela marcada en el mapa: pulsa sobre ella para abrir su ficha.", resumen] if p]
-        self.status_label.setText(" ".join(partes))
+        try:
+            naturaleza = naturaleza_parcela(refcat)
+        except Exception:
+            naturaleza = None
+
+        partes = [
+            aviso,
+            "Parcela marcada en el mapa: pulsa sobre ella para abrir su ficha.",
+            f"Naturaleza: {naturaleza}" if naturaleza else "",
+            resumen_hidrico(lon, lat),
+            resumen_red_natura(lon, lat),
+        ]
+        self.status_label.setText(" ".join(p for p in partes if p))
 
     def _resolver_por_referencia(self) -> str:
         entrada = self.ref_edit.text().strip()

@@ -3,6 +3,7 @@ from qgis.PyQt.QtGui import QColor
 
 CLAVE_ACUIFERO = "Catastrofe/mostrar_acuifero"
 CLAVE_ZONA_INUNDABLE = "Catastrofe/mostrar_zona_inundable"
+CLAVE_RED_NATURA = "Catastrofe/mostrar_red_natura"
 
 CLAVE_BORDE_COLOR = "Catastrofe/borde_color"
 CLAVE_BORDE_ANCHO = "Catastrofe/borde_ancho"
@@ -31,6 +32,14 @@ def set_mostrar_acuifero(valor: bool) -> None:
 
 def set_mostrar_zona_inundable(valor: bool) -> None:
     QgsSettings().setValue(CLAVE_ZONA_INUNDABLE, valor)
+
+
+def mostrar_red_natura() -> bool:
+    return QgsSettings().value(CLAVE_RED_NATURA, True, type=bool)
+
+
+def set_mostrar_red_natura(valor: bool) -> None:
+    QgsSettings().setValue(CLAVE_RED_NATURA, valor)
 
 
 def color_borde() -> QColor:

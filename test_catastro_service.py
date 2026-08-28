@@ -3,6 +3,8 @@ Ejecutar: python3 test_catastro_service.py
 """
 from catastro_service import (
     CatastroLookupError,
+    datos_ficha,
+    naturaleza_parcela,
     normalizar_referencia,
     refcats_en_poligono_parcela,
     url_sedecatastro_para_punto,
@@ -27,6 +29,12 @@ CASOS_POLIGONO_PARCELA = [
     # (provincia, municipio, poligono, parcela, descripcion, se_espera_resultado)
     ("VALENCIA", "GODELLETA", "1", "10", "polígono/parcela real en Godelleta", True),
     ("VALENCIA", "GODELLETA", "1", "1", "polígono/parcela inexistente en Godelleta", False),
+]
+
+CASOS_NATURALEZA = [
+    # (refcat14, naturaleza_esperada, descripcion)
+    ("46138A00100010", "Rústica", "Godelleta, resultado único"),
+    ("0443104VK4704C", "Urbana", "Madrid Carretas 10, varias unidades catastrales"),
 ]
 
 
@@ -64,6 +72,17 @@ def main():
             ok = not se_espera_resultado
             print(f"[{'OK' if ok else 'FALLO'}] {descripcion}: error -> {exc}")
             fallos += 0 if ok else 1
+
+    for refcat, esperado, descripcion in CASOS_NATURALEZA:
+        naturaleza = naturaleza_parcela(refcat)
+        ok = naturaleza == esperado
+        print(f"[{'OK' if ok else 'FALLO'}] {descripcion}: {naturaleza}")
+        fallos += 0 if ok else 1
+
+        datos = datos_ficha(refcat)
+        ok = bool(datos.get("url")) and datos.get("naturaleza") == esperado
+        print(f"[{'OK' if ok else 'FALLO'}] {descripcion} (datos_ficha): {datos}")
+        fallos += 0 if ok else 1
 
     if fallos:
         raise SystemExit(f"{fallos} caso(s) fallido(s)")

@@ -17,9 +17,13 @@ No depende de tener cargada ninguna capa de parcelas: usa directamente el
 **Clic en el mapa:**
 1. Transforma el punto pulsado a WGS84 (EPSG:4326).
 2. `Consulta_RCCOOR`: coordenadas → referencia catastral (14 posiciones).
-3. `Consulta_DNPRC`: referencia catastral → URL de la ficha gráfica
-   (el propio Catastro la devuelve hecha en el campo `<igraf>`, no hay que
-   construirla a mano).
+3. `Consulta_DNPRC`: referencia catastral → URL de la ficha gráfica (en el
+   campo `<igraf>`) y naturaleza (rústica/urbana, campo `<cn>`). Si la
+   referencia tiene varias unidades catastrales asociadas (un edificio con
+   varios locales o pisos, división horizontal), Catastro no da esos datos
+   para la referencia de 14 caracteres a secas: el plugin repite la
+   consulta con la referencia completa (20 caracteres) de la primera
+   unidad, que sí los da.
 4. Abre esa URL en una pestaña nueva del navegador por defecto.
 
 Si el punto pulsado cae en la calle o fuera de una parcela, el Catastro
@@ -42,22 +46,24 @@ centro. Activa además la misma herramienta de clic de siempre, así que desde
 ahí basta con pulsar sobre la parcela marcada para abrir su ficha en el
 navegador.
 
-**Dato hídrico (opcional):** al pulsar sobre una parcela (o al marcarla desde
-el panel de búsqueda) también consulta el WFS público del MITECO
-(`gis.miteco.gob.es/geoserver/agua`) para ese mismo punto y muestra, si
-aplica:
-- **Acuífero**: masa de agua subterránea en la que cae la parcela.
-- **Zona inundable / dominio público hidráulico**: si la parcela está en
-  zona de flujo preferente o en zona inundable (T10/T100/T500).
+**Datos ambientales (opcionales):** al pulsar sobre una parcela (o al
+marcarla desde el panel de búsqueda) también se consulta, para ese mismo
+punto:
+- **Acuífero** y **zona inundable / dominio público hidráulico**: WFS
+  público del MITECO (`gis.miteco.gob.es/geoserver/agua`). Es el único dato
+  hídrico que ofrece de forma abierta y sin login para toda España
+  (incluidas cuencas intracomunitarias); no hay dato público de concesiones
+  de agua ni de comunidades de regantes.
+- **Red Natura 2000**: si la parcela está dentro de un espacio protegido
+  (ZEC/ZEPA), vía el WFS del IEPNB (`geoserver.iepnb.es/geoserver/RN2000`).
 
-Es el único dato hídrico que estos servicios ofrecen de forma abierta y sin
-login para toda España (incluidas cuencas intracomunitarias); no hay dato
-público de concesiones de agua ni de comunidades de regantes.
+Se descartó mostrar el uso agrícola tipo SIGPAC (labor, olivar, viñedo...):
+el servicio nacional solo tiene WMS con `GetFeatureInfo` por píxel, no WFS
+por punto — bastante más frágil que los otros tres, así que no se integró.
 
 **Ajustes (menú Catastrofe → Ajustes…):**
-- Activar/desactivar el aviso de acuífero y el de zona inundable por
-  separado (con ambos desactivados no se hace ninguna consulta extra al
-  MITECO).
+- Activar/desactivar cada uno de los tres avisos anteriores por separado
+  (con los tres desactivados no se hace ninguna consulta ambiental extra).
 - Estilo del resaltado de la parcela en el mapa: color y ancho del borde,
   y sombreado interior opcional (activarlo, color y opacidad).
 
@@ -70,8 +76,10 @@ Navarra (tienen catastro foral propio, con sus propias sedes).
 ## Instalación (modo desarrollo)
 
 ```bash
-ln -s ~/Projects/catastrofe ~/.local/share/QGIS/QGIS3/profiles/default/python/plugins/catastrofe
+ln -s ~/Projects/catastrofe ~/.local/share/QGIS/QGIS4/profiles/default/python/plugins/catastrofe
 ```
+
+(La carpeta de perfil es `QGIS4` desde QGIS 4.x; en versiones 3.x sería `QGIS3`.)
 
 Luego, en QGIS: *Complementos → Administrar e instalar complementos →
 Instalados* y activar "Catastrofe". Aparecen dos iconos en la barra de
@@ -80,19 +88,24 @@ lateral).
 
 ## Pruebas sin QGIS
 
-La lógica de consulta al Catastro (`catastro_service.py`) y al MITECO
-(`hidro_service.py`) no depende de PyQGIS y se puede probar aparte:
+La lógica de consulta al Catastro (`catastro_service.py`), al MITECO
+(`hidro_service.py`) y a Red Natura 2000 (`natura_service.py`) no depende
+de PyQGIS y se puede probar aparte:
 
 ```bash
 python3 test_catastro_service.py
 python3 test_hidro_service.py
+python3 test_natura_service.py
 ```
+
+Probado también dentro de QGIS real (QGIS 4.2.1) con `qgis.testing`
+(mock de `iface` + `QgsApplication` en modo *offscreen*): clic en el mapa,
+panel de búsqueda por referencia y por polígono/parcela, marcado en el mapa,
+avisos ambientales, y el caso de parcela urbana con varias unidades
+catastrales.
 
 ## Pendiente
 
-- Probar dentro de QGIS real (ya instalado en esta máquina, falta activar
-  el complemento y probar clic + panel de búsqueda con QGIS abierto).
 - Decidir si se publica en el repositorio de plugins de QGIS: hace falta
-  LICENSE con el texto completo (por ahora solo GPL-3.0-or-later en
-  `metadata.txt`/cabeceras, sin el texto íntegro) y una cuenta en
-  `plugins.qgis.org`.
+  una cuenta en `plugins.qgis.org` (el `LICENSE` con el texto completo de
+  la GPL-3.0-or-later ya está en el repo).
