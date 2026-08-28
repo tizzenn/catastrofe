@@ -1,7 +1,21 @@
 """Pruebas manuales contra el servicio real del Catastro (sin QGIS).
 Ejecutar: python3 test_catastro_service.py
 """
-from catastro_service import CatastroLookupError, refcats_en_poligono_parcela, url_sedecatastro_para_punto
+from catastro_service import (
+    CatastroLookupError,
+    normalizar_referencia,
+    refcats_en_poligono_parcela,
+    url_sedecatastro_para_punto,
+)
+
+CASOS_NORMALIZACION = [
+    # (entrada, esperado_o_None_si_debe_fallar, descripcion)
+    ("46138A00100010", "46138A00100010", "14 caracteres, ya normalizada"),
+    ("46138a00100010", "46138A00100010", "minúsculas"),
+    (" 46138A0 0100010 ", "46138A00100010", "con espacios, como se copia a veces"),
+    ("46138A001000100000WX", "46138A00100010", "20 caracteres (referencia completa con unidad+control)"),
+    ("46138A0010001", None, "13 caracteres, insuficiente"),
+]
 
 CASOS_PUNTO = [
     # (lon, lat, descripcion, se_espera_url)
@@ -18,6 +32,17 @@ CASOS_POLIGONO_PARCELA = [
 
 def main():
     fallos = 0
+    for entrada, esperado, descripcion in CASOS_NORMALIZACION:
+        try:
+            resultado = normalizar_referencia(entrada)
+            ok = resultado == esperado
+            print(f"[{'OK' if ok else 'FALLO'}] {descripcion}: {resultado!r}")
+            fallos += 0 if ok else 1
+        except CatastroLookupError as exc:
+            ok = esperado is None
+            print(f"[{'OK' if ok else 'FALLO'}] {descripcion}: error -> {exc}")
+            fallos += 0 if ok else 1
+
     for lon, lat, descripcion, se_espera_url in CASOS_PUNTO:
         try:
             url = url_sedecatastro_para_punto(lon, lat)

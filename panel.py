@@ -22,6 +22,7 @@ from qgis.PyQt.QtWidgets import (
 from .catastro_service import (
     CatastroLookupError,
     geometria_parcela,
+    normalizar_referencia,
     punto_de_referencia,
     refcats_en_poligono_parcela,
 )
@@ -105,10 +106,10 @@ class CatastrofePanel(QDockWidget):
         self.status_label.setText(" ".join(partes))
 
     def _resolver_por_referencia(self) -> str:
-        refcat = self.ref_edit.text().strip().upper()
-        if not refcat:
+        entrada = self.ref_edit.text().strip()
+        if not entrada:
             raise CatastroLookupError("Escribe una referencia catastral.")
-        return refcat
+        return normalizar_referencia(entrada)
 
     def _resolver_por_poligono_parcela(self):
         provincia = self.provincia_edit.text().strip()
@@ -137,7 +138,8 @@ class CatastrofePanel(QDockWidget):
         if self.rubber_band is not None:
             canvas.scene().removeItem(self.rubber_band)
         self.rubber_band = QgsRubberBand(canvas, geometria.type())
-        self.rubber_band.setColor(QColor(224, 112, 32, 160))
+        self.rubber_band.setStrokeColor(QColor(224, 112, 32, 255))
+        self.rubber_band.setFillColor(QColor(0, 0, 0, 0))
         self.rubber_band.setWidth(3)
         if geometria.type() == QgsWkbTypes.PointGeometry:
             self.rubber_band.setIcon(QgsRubberBand.ICON_CIRCLE)

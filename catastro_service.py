@@ -20,6 +20,22 @@ class CatastroLookupError(Exception):
     """La consulta al Catastro no ha dado una referencia catastral utilizable."""
 
 
+def normalizar_referencia(entrada: str) -> str:
+    """Normaliza una referencia catastral escrita o pegada a mano.
+
+    La referencia "completa" tiene 20 caracteres (14 de parcela + 4 de
+    unidad constructiva + 2 de control), y así es como suele aparecer en
+    recibos del IBI o escrituras, a veces con espacios entre grupos. Pero
+    los 14 primeros ya identifican la parcela sin ambigüedad (el resto no
+    hace falta para pedir su ficha gráfica), así que aceptamos cualquier
+    longitud a partir de 14 y nos quedamos con esos 14 primeros caracteres.
+    """
+    limpia = "".join(entrada.split()).upper()
+    if len(limpia) < 14:
+        raise CatastroLookupError("La referencia catastral debe tener al menos 14 caracteres.")
+    return limpia[:14]
+
+
 def _fetch(url: str) -> bytes:
     req = urllib.request.Request(url, headers={"User-Agent": USER_AGENT})
     with urllib.request.urlopen(req, timeout=TIMEOUT) as resp:

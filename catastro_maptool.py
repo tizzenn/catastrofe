@@ -20,7 +20,7 @@ class CatastroClickTool(QgsMapTool):
         self.iface = iface
 
     def canvasReleaseEvent(self, event):
-        if event.button() != Qt.LeftButton:
+        if event.button() != Qt.MouseButton.LeftButton:
             return
 
         point = self.toMapCoordinates(event.pos())
