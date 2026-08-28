@@ -136,7 +136,7 @@ class CatastrofePanel(QDockWidget):
             if widget:
                 widget.deleteLater()
         self.copia_layout.addWidget(
-            fila_copiable("Referencia catastral completa:", refcat_completa or refcat)
+            fila_copiable("Referencia catastral:", refcat_completa or refcat)
         )
         poligono_parcela = formato_poligono_parcela(refcat)
         if poligono_parcela:
