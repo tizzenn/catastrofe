@@ -37,7 +37,7 @@ class CatastrofePlugin:
         icon_buscar = QIcon(icon_buscar_path) if os.path.exists(icon_buscar_path) else QIcon()
 
         self.panel = CatastrofePanel(self.iface, self.activar_herramienta_clic, self.iface.mainWindow())
-        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.panel)
+        self.iface.addDockWidget(Qt.DockWidgetArea.RightDockWidgetArea, self.panel)
         self.panel.hide()
         self.panel_action = self.panel.toggleViewAction()
         self.panel_action.setIcon(icon_buscar)
