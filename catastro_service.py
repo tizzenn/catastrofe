@@ -100,15 +100,33 @@ def _consulta_dnprc_bi(refcat14: str, fetch=_fetch):
 NATURALEZA = {"RU": "Rústica", "UR": "Urbana"}
 
 
+def _referencia_completa(bi: ET.Element):
+    """Referencia catastral completa (20 caracteres: 14 de parcela + 4 de
+    unidad constructiva + 2 de control), tal y como aparece en el recibo del
+    IBI, a partir del nodo <rc> que ya trae calculados esos dígitos de
+    control. None si el nodo no está o le falta algún campo."""
+    rc = bi.find("cat:idbi/cat:rc", NS)
+    if rc is None:
+        return None
+    campos = ("pc1", "pc2", "car", "cc1", "cc2")
+    valores = [rc.findtext(f"cat:{campo}", default="", namespaces=NS) for campo in campos]
+    return "".join(valores) if all(valores) else None
+
+
 def datos_ficha(refcat14: str, fetch=_fetch) -> dict:
-    """URL de la ficha gráfica y naturaleza (Rústica/Urbana) de la parcela,
-    en una sola consulta a Consulta_DNPRC."""
+    """URL de la ficha gráfica, naturaleza (Rústica/Urbana) y referencia
+    catastral completa de la parcela, en una sola consulta a Consulta_DNPRC."""
     root, bi = _consulta_dnprc_bi(refcat14, fetch=fetch)
     igraf = root.findtext(".//cat:finca/cat:infgraf/cat:igraf", namespaces=NS)
     if not igraf:
         raise CatastroLookupError("El Catastro no ha devuelto un enlace a la ficha gráfica.")
     cn = bi.findtext("cat:idbi/cat:cn", namespaces=NS)
-    return {"url": igraf, "naturaleza": NATURALEZA.get(cn), "refcat": refcat14}
+    return {
+        "url": igraf,
+        "naturaleza": NATURALEZA.get(cn),
+        "refcat": refcat14,
+        "refcat_completa": _referencia_completa(bi),
+    }
 
 
 def url_ficha_grafica(refcat14: str, fetch=_fetch) -> str:
@@ -116,10 +134,19 @@ def url_ficha_grafica(refcat14: str, fetch=_fetch) -> str:
     return datos_ficha(refcat14, fetch=fetch)["url"]
 
 
+def naturaleza_y_referencia_completa(refcat14: str, fetch=_fetch) -> dict:
+    """Naturaleza (Rústica/Urbana) y referencia catastral completa (20
+    caracteres), sin exigir que la parcela tenga ficha gráfica (a diferencia
+    de datos_ficha) — pensada para el panel de búsqueda, que ya obtiene el
+    enlace por otra consulta distinta (punto_de_referencia + geometria)."""
+    _, bi = _consulta_dnprc_bi(refcat14, fetch=fetch)
+    cn = bi.findtext("cat:idbi/cat:cn", namespaces=NS)
+    return {"naturaleza": NATURALEZA.get(cn), "refcat_completa": _referencia_completa(bi)}
+
+
 def naturaleza_parcela(refcat14: str, fetch=_fetch):
     """'Rústica' o 'Urbana' según el Catastro, o None si no viene informado."""
-    _, bi = _consulta_dnprc_bi(refcat14, fetch=fetch)
-    return NATURALEZA.get(bi.findtext("cat:idbi/cat:cn", namespaces=NS))
+    return naturaleza_y_referencia_completa(refcat14, fetch=fetch)["naturaleza"]
 
 
 def formato_poligono_parcela(refcat14: str):

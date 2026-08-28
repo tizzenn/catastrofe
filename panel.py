@@ -23,7 +23,7 @@ from .catastro_service import (
     CatastroLookupError,
     formato_poligono_parcela,
     geometria_parcela,
-    naturaleza_parcela,
+    naturaleza_y_referencia_completa,
     normalizar_referencia,
     punto_de_referencia,
     refcats_en_poligono_parcela,
@@ -107,7 +107,12 @@ class CatastrofePanel(QDockWidget):
             self.status_label.setText(f"No se pudo completar la consulta: {exc}")
             return
 
-        self._mostrar_referencia(refcat)
+        try:
+            datos_refcat = naturaleza_y_referencia_completa(refcat)
+        except Exception:
+            datos_refcat = {}
+        naturaleza = datos_refcat.get("naturaleza")
+        self._mostrar_referencia(refcat, datos_refcat.get("refcat_completa"))
 
         try:
             self._marcar_en_mapa(refcat, lon, lat)
@@ -115,11 +120,6 @@ class CatastrofePanel(QDockWidget):
             self.status_label.setText(f"No se pudo marcar la parcela en el mapa: {exc}")
             return
         self.activar_herramienta_clic()
-
-        try:
-            naturaleza = naturaleza_parcela(refcat)
-        except Exception:
-            naturaleza = None
 
         partes = [
             aviso,
@@ -130,12 +130,14 @@ class CatastrofePanel(QDockWidget):
         ]
         self.status_label.setText(" ".join(p for p in partes if p))
 
-    def _mostrar_referencia(self, refcat: str):
+    def _mostrar_referencia(self, refcat: str, refcat_completa=None):
         while self.copia_layout.count():
             widget = self.copia_layout.takeAt(0).widget()
             if widget:
                 widget.deleteLater()
-        self.copia_layout.addWidget(fila_copiable("Referencia catastral:", refcat))
+        self.copia_layout.addWidget(
+            fila_copiable("Referencia catastral completa:", refcat_completa or refcat)
+        )
         poligono_parcela = formato_poligono_parcela(refcat)
         if poligono_parcela:
             self.copia_layout.addWidget(fila_copiable("Polígono/parcela:", poligono_parcela))

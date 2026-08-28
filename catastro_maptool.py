@@ -56,7 +56,7 @@ class CatastroClickTool(QgsMapTool):
         contenedor = QWidget()
         layout = QVBoxLayout(contenedor)
         layout.setContentsMargins(0, 0, 0, 0)
-        layout.addWidget(fila_copiable("Referencia catastral:", datos["refcat"]))
+        layout.addWidget(fila_copiable("Referencia catastral completa:", datos["refcat_completa"] or datos["refcat"]))
         poligono_parcela = formato_poligono_parcela(datos["refcat"])
         if poligono_parcela:
             layout.addWidget(fila_copiable("Polígono/parcela:", poligono_parcela))

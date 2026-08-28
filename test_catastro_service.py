@@ -88,7 +88,12 @@ def main():
         fallos += 0 if ok else 1
 
         datos = datos_ficha(refcat)
-        ok = bool(datos.get("url")) and datos.get("naturaleza") == esperado
+        ok = (
+            bool(datos.get("url"))
+            and datos.get("naturaleza") == esperado
+            and datos.get("refcat_completa", "").startswith(refcat)
+            and len(datos.get("refcat_completa", "")) == 20
+        )
         print(f"[{'OK' if ok else 'FALLO'}] {descripcion} (datos_ficha): {datos}")
         fallos += 0 if ok else 1
 
