@@ -1,0 +1,20 @@
+[general]
+name=Catastrofe
+qgisMinimumVersion=3.16
+description=Al pulsar una parcela en el mapa, abre su ficha en la Sede Electrónica del Catastro.
+version=0.1
+author=Rober (tizzenn)
+email=xphnx@tutamail.com
+about=Activa una herramienta de mapa: al pulsar sobre una parcela, consulta el
+    servicio web libre de la Sede Electrónica del Catastro para obtener su
+    referencia catastral y abre en el navegador la ficha gráfica de esa
+    parcela. Solo funciona para el territorio de aplicación del Catastro
+    (no incluye País Vasco ni Navarra, que tienen catastro foral propio).
+tracker=https://github.com/tizzenn/catastrofe/issues
+repository=https://github.com/tizzenn/catastrofe
+tags=catastro,cadastre,spain,parcela
+category=Plugins
+icon=icon.svg
+experimental=True
+deprecated=False
+server=False
