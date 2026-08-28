@@ -16,6 +16,7 @@ about=Enables a map tool: clicking a plot queries the free web service of the
     classified as rural or urban land. Only covers the territory served by
     the Spanish Cadastre (not the Basque Country or Navarre, which have
     their own regional cadastre).
+homepage=https://github.com/tizzenn/catastrofe
 tracker=https://github.com/tizzenn/catastrofe/issues
 repository=https://github.com/tizzenn/catastrofe
 tags=catastro,cadastre,spain,parcela
