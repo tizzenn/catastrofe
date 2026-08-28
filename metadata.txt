@@ -4,8 +4,8 @@ qgisMinimumVersion=3.16
 qgisMaximumVersion=4.99
 description=Al pulsar una parcela en el mapa, abre su ficha en la Sede Electrónica del Catastro.
 version=0.1
-author=Rober (tizzenn)
-email=xphnx@tutamail.com
+author=Catastrofe
+email=noreply@catastrofe.local
 about=Activa una herramienta de mapa: al pulsar sobre una parcela, consulta el
     servicio web libre de la Sede Electrónica del Catastro para obtener su
     referencia catastral y abre en el navegador la ficha gráfica de esa
