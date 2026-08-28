@@ -26,17 +26,26 @@ Si el punto pulsado cae en la calle o fuera de una parcela, el Catastro
 devuelve un error ("para esas coordenadas no hay referencia disponible")
 y el plugin lo muestra en la barra de mensajes de QGIS en vez de abrir nada.
 
-**Buscar parcela (menú Catastrofe → Buscar parcela…):** diálogo con dos
-pestañas, sin necesidad de tener el mapa centrado en la zona:
+**Buscar parcela (menú Catastrofe → Buscar parcela, panel lateral):** dos
+pestañas, sin necesidad de tener el mapa centrado en la zona ni conocer sus
+coordenadas:
 - Por referencia catastral directa (14 caracteres).
 - Por polígono y parcela rústicos (`Consulta_DNPPP`), dando la provincia y
   el municipio por su nombre (no código INE) más los números de polígono y
   parcela. Si una parcela tiene varias fincas asociadas (p.ej. una rústica y
-  otra con edificación) se abre la primera y se avisa en el propio diálogo.
+  otra con edificación) se marca la primera y se avisa en el propio panel.
 
-**Dato hídrico (opcional):** además de abrir la ficha, consulta el WFS
-público del MITECO (`gis.miteco.gob.es/geoserver/agua`) para ese mismo punto
-y muestra, si aplica:
+Al buscar, el panel dibuja el contorno real de la parcela sobre el mapa
+principal (vía el WFS INSPIRE de parcelas catastrales del propio Catastro) y
+hace zoom hasta ella; si ese contorno no está disponible, marca al menos su
+centro. Activa además la misma herramienta de clic de siempre, así que desde
+ahí basta con pulsar sobre la parcela marcada para abrir su ficha en el
+navegador.
+
+**Dato hídrico (opcional):** al pulsar sobre una parcela (o al marcarla desde
+el panel de búsqueda) también consulta el WFS público del MITECO
+(`gis.miteco.gob.es/geoserver/agua`) para ese mismo punto y muestra, si
+aplica:
 - **Acuífero**: masa de agua subterránea en la que cae la parcela.
 - **Zona inundable / dominio público hidráulico**: si la parcela está en
   zona de flujo preferente o en zona inundable (T10/T100/T500).
@@ -58,22 +67,24 @@ ln -s ~/Projects/catastrofe ~/.local/share/QGIS/QGIS3/profiles/default/python/pl
 ```
 
 Luego, en QGIS: *Complementos → Administrar e instalar complementos →
-Instalados* y activar "Catastrofe". El icono aparece en la barra de
-herramientas.
+Instalados* y activar "Catastrofe". Aparecen dos iconos en la barra de
+herramientas: el de clic en el mapa y el de "Buscar parcela" (abre el panel
+lateral).
 
 ## Pruebas sin QGIS
 
-La lógica de consulta al Catastro (`catastro_service.py`) no depende de
-PyQGIS y se puede probar aparte:
+La lógica de consulta al Catastro (`catastro_service.py`) y al MITECO
+(`hidro_service.py`) no depende de PyQGIS y se puede probar aparte:
 
 ```bash
 python3 test_catastro_service.py
+python3 test_hidro_service.py
 ```
 
 ## Pendiente
 
 - Probar dentro de QGIS real (ya instalado en esta máquina, falta activar
-  el complemento y probar clic + diálogo de búsqueda con QGIS abierto).
+  el complemento y probar clic + panel de búsqueda con QGIS abierto).
 - Decidir si se publica en el repositorio de plugins de QGIS: hace falta
   LICENSE con el texto completo (por ahora solo GPL-3.0-or-later en
   `metadata.txt`/cabeceras, sin el texto íntegro) y una cuenta en

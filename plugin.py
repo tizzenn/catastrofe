@@ -1,10 +1,11 @@
 import os
 
+from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
 from qgis.PyQt.QtWidgets import QAction, QMenu
 
 from .catastro_maptool import CatastroClickTool
-from .dialog import BuscarParcelaDialog
+from .panel import CatastrofePanel
 from .settings import (
     mostrar_acuifero,
     mostrar_zona_inundable,
@@ -18,10 +19,10 @@ class CatastrofePlugin:
         self.iface = iface
         self.menu = None
         self.action = None
-        self.search_action = None
         self.map_tool = None
         self.previous_tool = None
-        self.search_dialog = None
+        self.panel = None
+        self.panel_action = None
 
     def initGui(self):
         icon_path = os.path.join(os.path.dirname(__file__), "icon.svg")
@@ -32,8 +33,16 @@ class CatastrofePlugin:
         self.action.toggled.connect(self.toggle_tool)
         self.iface.addToolBarIcon(self.action)
 
-        self.search_action = QAction("Buscar parcela (referencia o polígono/parcela)…", self.iface.mainWindow())
-        self.search_action.triggered.connect(self.open_search_dialog)
+        icon_buscar_path = os.path.join(os.path.dirname(__file__), "icon_buscar.svg")
+        icon_buscar = QIcon(icon_buscar_path) if os.path.exists(icon_buscar_path) else QIcon()
+
+        self.panel = CatastrofePanel(self.iface, self.activar_herramienta_clic, self.iface.mainWindow())
+        self.iface.addDockWidget(Qt.RightDockWidgetArea, self.panel)
+        self.panel.hide()
+        self.panel_action = self.panel.toggleViewAction()
+        self.panel_action.setIcon(icon_buscar)
+        self.panel_action.setText("Buscar parcela")
+        self.iface.addToolBarIcon(self.panel_action)
 
         ajustes_menu = QMenu("Ajustes", self.iface.mainWindow())
         self.accion_acuifero = QAction("Mostrar acuífero (agua subterránea)", ajustes_menu)
@@ -49,7 +58,7 @@ class CatastrofePlugin:
 
         self.menu = QMenu("Catastrofe", self.iface.mainWindow())
         self.menu.addAction(self.action)
-        self.menu.addAction(self.search_action)
+        self.menu.addAction(self.panel_action)
         self.menu.addMenu(ajustes_menu)
         self.iface.pluginMenu().addMenu(self.menu)
 
@@ -61,20 +70,17 @@ class CatastrofePlugin:
         self.iface.mapCanvas().mapToolSet.disconnect(self.on_map_tool_changed)
         self.iface.pluginMenu().removeAction(self.menu.menuAction())
         self.iface.removeToolBarIcon(self.action)
+        self.iface.removeToolBarIcon(self.panel_action)
+        self.panel.limpiar_marca()
+        self.iface.removeDockWidget(self.panel)
+        self.panel = None
+        self.panel_action = None
         self.menu = None
         self.map_tool = None
         self.action = None
-        self.search_action = None
-        if self.search_dialog is not None:
-            self.search_dialog.close()
-            self.search_dialog = None
 
-    def open_search_dialog(self):
-        if self.search_dialog is None:
-            self.search_dialog = BuscarParcelaDialog(self.iface.mainWindow())
-        self.search_dialog.show()
-        self.search_dialog.raise_()
-        self.search_dialog.activateWindow()
+    def activar_herramienta_clic(self):
+        self.action.setChecked(True)
 
     def toggle_tool(self, checked):
         if checked:

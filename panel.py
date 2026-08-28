@@ -1,0 +1,159 @@
+from qgis.core import (
+    QgsCoordinateReferenceSystem,
+    QgsCoordinateTransform,
+    QgsGeometry,
+    QgsPointXY,
+    QgsProject,
+    QgsWkbTypes,
+)
+from qgis.gui import QgsRubberBand
+from qgis.PyQt.QtGui import QColor
+from qgis.PyQt.QtWidgets import (
+    QDockWidget,
+    QFormLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QTabWidget,
+    QVBoxLayout,
+    QWidget,
+)
+
+from .catastro_service import (
+    CatastroLookupError,
+    geometria_parcela,
+    punto_de_referencia,
+    refcats_en_poligono_parcela,
+)
+from .hidro_info import resumen_hidrico
+
+WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
+
+
+class CatastrofePanel(QDockWidget):
+    """Panel lateral: busca una parcela por referencia o por polígono/parcela,
+    la marca en el mapa principal y activa la herramienta de clic, para que
+    pulsar sobre ella abra su ficha en el navegador."""
+
+    def __init__(self, iface, activar_herramienta_clic, parent=None):
+        super().__init__("Buscar parcela", parent)
+        self.iface = iface
+        self.activar_herramienta_clic = activar_herramienta_clic
+        self.rubber_band = None
+
+        self.ref_edit = QLineEdit()
+        self.ref_edit.setPlaceholderText("Ej. 46138A00100010")
+        tab_referencia = QWidget()
+        form_referencia = QFormLayout(tab_referencia)
+        form_referencia.addRow("Referencia catastral:", self.ref_edit)
+
+        self.provincia_edit = QLineEdit()
+        self.provincia_edit.setPlaceholderText("Ej. VALENCIA")
+        self.municipio_edit = QLineEdit()
+        self.municipio_edit.setPlaceholderText("Ej. GODELLETA")
+        self.poligono_edit = QLineEdit()
+        self.poligono_edit.setPlaceholderText("Ej. 1")
+        self.parcela_edit = QLineEdit()
+        self.parcela_edit.setPlaceholderText("Ej. 10")
+        tab_poligono = QWidget()
+        form_poligono = QFormLayout(tab_poligono)
+        form_poligono.addRow("Provincia:", self.provincia_edit)
+        form_poligono.addRow("Municipio:", self.municipio_edit)
+        form_poligono.addRow("Polígono:", self.poligono_edit)
+        form_poligono.addRow("Parcela:", self.parcela_edit)
+
+        self.tabs = QTabWidget()
+        self.tabs.addTab(tab_referencia, "Por referencia")
+        self.tabs.addTab(tab_poligono, "Por polígono y parcela")
+
+        self.status_label = QLabel("")
+        self.status_label.setWordWrap(True)
+
+        buscar_btn = QPushButton("Buscar")
+        buscar_btn.setDefault(True)
+        buscar_btn.clicked.connect(self.buscar)
+
+        contenido = QWidget()
+        layout = QVBoxLayout(contenido)
+        layout.addWidget(self.tabs)
+        layout.addWidget(buscar_btn)
+        layout.addWidget(self.status_label)
+        layout.addStretch()
+        self.setWidget(contenido)
+
+    def buscar(self):
+        self.status_label.setText("Consultando…")
+        try:
+            if self.tabs.currentIndex() == 0:
+                refcat = self._resolver_por_referencia()
+                aviso = ""
+            else:
+                refcat, aviso = self._resolver_por_poligono_parcela()
+            lon, lat = punto_de_referencia(refcat)
+        except CatastroLookupError as exc:
+            self.status_label.setText(str(exc))
+            return
+        except Exception as exc:
+            self.status_label.setText(f"No se pudo completar la consulta: {exc}")
+            return
+
+        self._marcar_en_mapa(refcat, lon, lat)
+        self.activar_herramienta_clic()
+
+        resumen = resumen_hidrico(lon, lat)
+        partes = [p for p in [aviso, "Parcela marcada en el mapa: pulsa sobre ella para abrir su ficha.", resumen] if p]
+        self.status_label.setText(" ".join(partes))
+
+    def _resolver_por_referencia(self) -> str:
+        refcat = self.ref_edit.text().strip().upper()
+        if not refcat:
+            raise CatastroLookupError("Escribe una referencia catastral.")
+        return refcat
+
+    def _resolver_por_poligono_parcela(self):
+        provincia = self.provincia_edit.text().strip()
+        municipio = self.municipio_edit.text().strip()
+        poligono = self.poligono_edit.text().strip()
+        parcela = self.parcela_edit.text().strip()
+        if not all([provincia, municipio, poligono, parcela]):
+            raise CatastroLookupError("Rellena provincia, municipio, polígono y parcela.")
+
+        refcats = refcats_en_poligono_parcela(provincia, municipio, poligono, parcela)
+        aviso = f"Hay {len(refcats)} fincas asociadas; se ha marcado la primera." if len(refcats) > 1 else ""
+        return refcats[0], aviso
+
+    def _marcar_en_mapa(self, refcat, lon, lat):
+        canvas = self.iface.mapCanvas()
+        project_crs = canvas.mapSettings().destinationCrs()
+        transform = QgsCoordinateTransform(WGS84, project_crs, QgsProject.instance())
+
+        try:
+            anillo = geometria_parcela(refcat)
+            puntos = [transform.transform(QgsPointXY(lon_p, lat_p)) for lon_p, lat_p in anillo]
+            geometria = QgsGeometry.fromPolygonXY([puntos])
+        except CatastroLookupError:
+            geometria = QgsGeometry.fromPointXY(transform.transform(QgsPointXY(lon, lat)))
+
+        if self.rubber_band is not None:
+            canvas.scene().removeItem(self.rubber_band)
+        self.rubber_band = QgsRubberBand(canvas, geometria.type())
+        self.rubber_band.setColor(QColor(224, 112, 32, 160))
+        self.rubber_band.setWidth(3)
+        if geometria.type() == QgsWkbTypes.PointGeometry:
+            self.rubber_band.setIcon(QgsRubberBand.ICON_CIRCLE)
+            self.rubber_band.setIconSize(14)
+        self.rubber_band.setToGeometry(geometria, None)
+
+        if geometria.type() == QgsWkbTypes.PolygonGeometry:
+            extent = geometria.boundingBox()
+            extent.scale(2.5)
+            canvas.setExtent(extent)
+        else:
+            canvas.setCenter(transform.transform(QgsPointXY(lon, lat)))
+            canvas.zoomScale(2000)
+        canvas.refresh()
+
+    def limpiar_marca(self):
+        if self.rubber_band is not None:
+            self.iface.mapCanvas().scene().removeItem(self.rubber_band)
+            self.rubber_band = None

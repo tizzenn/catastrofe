@@ -9,7 +9,9 @@ import xml.etree.ElementTree as ET
 
 COORDENADAS_SVC = "https://ovc.catastro.meh.es/OVCServWeb/OVCWcfCallejero/COVCCoordenadas.svc/rest"
 CALLEJERO_SVC = "https://ovc.catastro.meh.es/OVCServWeb/OVCWcfCallejero/COVCCallejero.svc/rest"
+INSPIRE_CP_SVC = "http://ovc.catastro.meh.es/INSPIRE/wfsCP.aspx"
 NS = {"cat": "http://www.catastro.meh.es/"}
+GML_NS = {"gml": "http://www.opengis.net/gml/3.2"}
 USER_AGENT = "Mozilla/5.0 (QGIS catastro-parcela plugin)"
 TIMEOUT = 8
 
@@ -112,3 +114,33 @@ def refcats_en_poligono_parcela(provincia: str, municipio: str, poligono: str, p
     if not refcats:
         raise CatastroLookupError("El Catastro no ha devuelto ninguna referencia para ese polígono y parcela.")
     return refcats
+
+
+def geometria_parcela(refcat14: str, fetch=_fetch) -> list:
+    """Contorno (lon, lat) de la parcela, vía el WFS INSPIRE de parcelas
+    catastrales (servicio distinto de los anteriores, sin relación con el
+    PDF de Webservices_Libres). Si la parcela tiene varios recintos
+    separados, se devuelve solo el primero.
+
+    Pensada para usarse solo con un refcat14 ya validado por otra consulta
+    (RCCOOR/DNPRC/DNPPP): con una referencia inventada este servicio puede
+    devolver parcelas sin relación en vez de un error, así que no sirve
+    como forma de comprobar si una referencia existe.
+    """
+    url = INSPIRE_CP_SVC + "?" + urllib.parse.urlencode(
+        {
+            "service": "wfs",
+            "version": "2.0.0",
+            "REQUEST": "GetFeature",
+            "STOREDQUERIE_ID": "GetParcel",
+            "refcat": refcat14,
+            "srsname": "EPSG::4326",
+        }
+    )
+    root = ET.fromstring(_fetch_or_raise(url, fetch))
+    pos_list = root.find(".//gml:posList", GML_NS)
+    if pos_list is None or not pos_list.text:
+        raise CatastroLookupError("El Catastro no ha devuelto el contorno de esa parcela.")
+    valores = [float(v) for v in pos_list.text.split()]
+    # El WFS INSPIRE da pares (lat, lon); los invertimos a (lon, lat).
+    return [(valores[i + 1], valores[i]) for i in range(0, len(valores), 2)]
