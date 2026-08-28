@@ -2,15 +2,20 @@
 name=Catastrofe
 qgisMinimumVersion=3.16
 qgisMaximumVersion=4.99
-description=Al pulsar una parcela en el mapa, abre su ficha en la Sede Electrónica del Catastro.
+description=Click a plot on the map, or search it by cadastral reference, to open its record on the Spanish Cadastre website.
 version=0.1
 author=Catastrofe
-email=noreply@catastrofe.local
-about=Activa una herramienta de mapa: al pulsar sobre una parcela, consulta el
-    servicio web libre de la Sede Electrónica del Catastro para obtener su
-    referencia catastral y abre en el navegador la ficha gráfica de esa
-    parcela. Solo funciona para el territorio de aplicación del Catastro
-    (no incluye País Vasco ni Navarra, que tienen catastro foral propio).
+email=xphnx@tutamail.com
+about=Enables a map tool: clicking a plot queries the free web service of the
+    Spanish Cadastral Electronic Office (Sede Electronica del Catastro) to
+    get its cadastral reference, and opens its graphical record in the
+    browser. A dockable side panel also lets you search a plot by cadastral
+    reference or by rural poligono/parcela, marking it on the map first.
+    Optionally shows whether the plot sits on a groundwater body, a
+    flood-prone zone, or a Natura 2000 protected area, and whether it is
+    classified as rural or urban land. Only covers the territory served by
+    the Spanish Cadastre (not the Basque Country or Navarre, which have
+    their own regional cadastre).
 tracker=https://github.com/tizzenn/catastrofe/issues
 repository=https://github.com/tizzenn/catastrofe
 tags=catastro,cadastre,spain,parcela
