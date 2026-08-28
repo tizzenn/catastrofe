@@ -1,4 +1,4 @@
-from .hidro_service import HidroLookupError, acuifero_en_punto, zonas_inundables_en_punto
+from .hidro_service import acuifero_en_punto, zonas_inundables_en_punto
 from .settings import mostrar_acuifero, mostrar_zona_inundable
 
 
@@ -22,6 +22,6 @@ def resumen_hidrico(lon: float, lat: float) -> str:
             zonas = zonas_inundables_en_punto(lon, lat)
             if zonas:
                 partes.append("Zona inundable: " + ", ".join(zonas))
-    except HidroLookupError as exc:
+    except Exception as exc:
         return f"Datos hídricos no disponibles ({exc})"
     return " · ".join(partes)

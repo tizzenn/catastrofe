@@ -41,7 +41,8 @@ class CatastrofePanel(QDockWidget):
         super().__init__("Buscar parcela", parent)
         self.iface = iface
         self.activar_herramienta_clic = activar_herramienta_clic
-        self.rubber_band = None
+        self.rubber_band = QgsRubberBand(self.iface.mapCanvas(), QgsWkbTypes.PolygonGeometry)
+        self.rubber_band.hide()
 
         self.ref_edit = QLineEdit()
         self.ref_edit.setPlaceholderText("Ej. 46138A00100010")
@@ -99,7 +100,11 @@ class CatastrofePanel(QDockWidget):
             self.status_label.setText(f"No se pudo completar la consulta: {exc}")
             return
 
-        self._marcar_en_mapa(refcat, lon, lat)
+        try:
+            self._marcar_en_mapa(refcat, lon, lat)
+        except Exception as exc:
+            self.status_label.setText(f"No se pudo marcar la parcela en el mapa: {exc}")
+            return
         self.activar_herramienta_clic()
 
         resumen = resumen_hidrico(lon, lat)
@@ -133,12 +138,14 @@ class CatastrofePanel(QDockWidget):
             anillo = geometria_parcela(refcat)
             puntos = [transform.transform(QgsPointXY(lon_p, lat_p)) for lon_p, lat_p in anillo]
             geometria = QgsGeometry.fromPolygonXY([puntos])
-        except CatastroLookupError:
+        except Exception:
+            # Cualquier fallo al obtener/transformar el contorno (respuesta
+            # rara del Catastro, punto fuera del área de validez de la
+            # transformación de coordenadas...) cae a marcar solo el centro,
+            # que ya viene de una consulta distinta y más simple.
             geometria = QgsGeometry.fromPointXY(transform.transform(QgsPointXY(lon, lat)))
 
-        if self.rubber_band is not None:
-            canvas.scene().removeItem(self.rubber_band)
-        self.rubber_band = QgsRubberBand(canvas, geometria.type())
+        self.rubber_band.reset(geometria.type())
 
         color_borde = settings.color_borde()
         color_borde.setAlpha(255)

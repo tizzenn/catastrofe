@@ -60,11 +60,14 @@ class CatastrofePlugin:
         self.iface.removeToolBarIcon(self.panel_action)
         self.panel.limpiar_marca()
         self.iface.removeDockWidget(self.panel)
+        self.panel.deleteLater()
         self.panel = None
         self.panel_action = None
         if self.ajustes_dialog is not None:
             self.ajustes_dialog.close()
+            self.ajustes_dialog.deleteLater()
             self.ajustes_dialog = None
+        self.menu.deleteLater()
         self.menu = None
         self.map_tool = None
         self.action = None
@@ -84,7 +87,10 @@ class CatastrofePlugin:
             self.previous_tool = self.iface.mapCanvas().mapTool()
             self.iface.mapCanvas().setMapTool(self.map_tool)
         elif self.iface.mapCanvas().mapTool() is self.map_tool:
-            self.iface.mapCanvas().unsetMapTool(self.map_tool)
+            if self.previous_tool is not None:
+                self.iface.mapCanvas().setMapTool(self.previous_tool)
+            else:
+                self.iface.mapCanvas().unsetMapTool(self.map_tool)
 
     def on_map_tool_changed(self, new_tool, old_tool):
         if self.action is not None and new_tool is not self.map_tool:
