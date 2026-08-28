@@ -21,6 +21,7 @@ from qgis.PyQt.QtWidgets import (
 
 from .catastro_service import (
     CatastroLookupError,
+    formato_poligono_parcela,
     geometria_parcela,
     naturaleza_parcela,
     normalizar_referencia,
@@ -29,6 +30,7 @@ from .catastro_service import (
 )
 from .hidro_info import resumen_hidrico
 from .natura_info import resumen_red_natura
+from .portapapeles import fila_copiable
 from . import settings
 
 WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
@@ -74,6 +76,8 @@ class CatastrofePanel(QDockWidget):
         self.status_label = QLabel("")
         self.status_label.setWordWrap(True)
 
+        self.copia_layout = QVBoxLayout()
+
         buscar_btn = QPushButton("Buscar")
         buscar_btn.setDefault(True)
         buscar_btn.clicked.connect(self.buscar)
@@ -82,6 +86,7 @@ class CatastrofePanel(QDockWidget):
         layout = QVBoxLayout(contenido)
         layout.addWidget(self.tabs)
         layout.addWidget(buscar_btn)
+        layout.addLayout(self.copia_layout)
         layout.addWidget(self.status_label)
         layout.addStretch()
         self.setWidget(contenido)
@@ -101,6 +106,8 @@ class CatastrofePanel(QDockWidget):
         except Exception as exc:
             self.status_label.setText(f"No se pudo completar la consulta: {exc}")
             return
+
+        self._mostrar_referencia(refcat)
 
         try:
             self._marcar_en_mapa(refcat, lon, lat)
@@ -122,6 +129,16 @@ class CatastrofePanel(QDockWidget):
             resumen_red_natura(lon, lat),
         ]
         self.status_label.setText(" ".join(p for p in partes if p))
+
+    def _mostrar_referencia(self, refcat: str):
+        while self.copia_layout.count():
+            widget = self.copia_layout.takeAt(0).widget()
+            if widget:
+                widget.deleteLater()
+        self.copia_layout.addWidget(fila_copiable("Referencia catastral:", refcat))
+        poligono_parcela = formato_poligono_parcela(refcat)
+        if poligono_parcela:
+            self.copia_layout.addWidget(fila_copiable("Polígono/parcela:", poligono_parcela))
 
     def _resolver_por_referencia(self) -> str:
         entrada = self.ref_edit.text().strip()

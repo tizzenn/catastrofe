@@ -108,7 +108,7 @@ def datos_ficha(refcat14: str, fetch=_fetch) -> dict:
     if not igraf:
         raise CatastroLookupError("El Catastro no ha devuelto un enlace a la ficha gráfica.")
     cn = bi.findtext("cat:idbi/cat:cn", namespaces=NS)
-    return {"url": igraf, "naturaleza": NATURALEZA.get(cn)}
+    return {"url": igraf, "naturaleza": NATURALEZA.get(cn), "refcat": refcat14}
 
 
 def url_ficha_grafica(refcat14: str, fetch=_fetch) -> str:
@@ -120,6 +120,24 @@ def naturaleza_parcela(refcat14: str, fetch=_fetch):
     """'Rústica' o 'Urbana' según el Catastro, o None si no viene informado."""
     _, bi = _consulta_dnprc_bi(refcat14, fetch=fetch)
     return NATURALEZA.get(bi.findtext("cat:idbi/cat:cn", namespaces=NS))
+
+
+def formato_poligono_parcela(refcat14: str):
+    """Polígono y parcela en formato "polígono-parcela" (sin ceros a la
+    izquierda, p.ej. "1-10"), a partir de una referencia catastral de 14
+    caracteres.
+
+    Solo tiene sentido para fincas rústicas: en ese formato la posición 6
+    (índice 5) es siempre una letra fija, seguida de 3 dígitos de polígono y
+    5 de parcela. Las referencias urbanas usan esa misma posición para un
+    dígito de hoja catastral, así que ahí se devuelve None (no hay
+    polígono/parcela que mostrar).
+    """
+    if len(refcat14) != 14 or not refcat14[5].isalpha():
+        return None
+    poligono = refcat14[6:9].lstrip("0") or "0"
+    parcela = refcat14[9:14].lstrip("0") or "0"
+    return f"{poligono}-{parcela}"
 
 
 def _fetch_or_raise(url: str, fetch) -> bytes:

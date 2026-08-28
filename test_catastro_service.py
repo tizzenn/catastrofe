@@ -4,6 +4,7 @@ Ejecutar: python3 test_catastro_service.py
 from catastro_service import (
     CatastroLookupError,
     datos_ficha,
+    formato_poligono_parcela,
     naturaleza_parcela,
     normalizar_referencia,
     refcats_en_poligono_parcela,
@@ -35,6 +36,13 @@ CASOS_NATURALEZA = [
     # (refcat14, naturaleza_esperada, descripcion)
     ("46138A00100010", "Rústica", "Godelleta, resultado único"),
     ("0443104VK4704C", "Urbana", "Madrid Carretas 10, varias unidades catastrales"),
+]
+
+CASOS_POLIGONO_PARCELA_FORMATO = [
+    # (refcat14, esperado, descripcion)
+    ("46138A00100010", "1-10", "rústica con ceros a la izquierda"),
+    ("46138A12312345", "123-12345", "rústica sin ceros a la izquierda"),
+    ("0443104VK4704C", None, "urbana, no tiene polígono/parcela"),
 ]
 
 
@@ -82,6 +90,12 @@ def main():
         datos = datos_ficha(refcat)
         ok = bool(datos.get("url")) and datos.get("naturaleza") == esperado
         print(f"[{'OK' if ok else 'FALLO'}] {descripcion} (datos_ficha): {datos}")
+        fallos += 0 if ok else 1
+
+    for refcat, esperado, descripcion in CASOS_POLIGONO_PARCELA_FORMATO:
+        resultado = formato_poligono_parcela(refcat)
+        ok = resultado == esperado
+        print(f"[{'OK' if ok else 'FALLO'}] {descripcion}: {resultado!r}")
         fallos += 0 if ok else 1
 
     if fallos:

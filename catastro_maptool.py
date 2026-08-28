@@ -3,10 +3,12 @@ import webbrowser
 from qgis.core import Qgis, QgsCoordinateReferenceSystem, QgsCoordinateTransform, QgsProject
 from qgis.gui import QgsMapTool
 from qgis.PyQt.QtCore import Qt
+from qgis.PyQt.QtWidgets import QLabel, QVBoxLayout, QWidget
 
-from .catastro_service import CatastroLookupError, datos_sedecatastro_para_punto
+from .catastro_service import CatastroLookupError, datos_sedecatastro_para_punto, formato_poligono_parcela
 from .hidro_info import resumen_hidrico
 from .natura_info import resumen_red_natura
+from .portapapeles import fila_copiable
 
 WGS84 = QgsCoordinateReferenceSystem("EPSG:4326")
 
@@ -50,5 +52,14 @@ class CatastroClickTool(QgsMapTool):
             resumen_red_natura(point_wgs84.x(), point_wgs84.y()),
         ]
         resumen = " · ".join(p for p in partes if p)
+
+        contenedor = QWidget()
+        layout = QVBoxLayout(contenedor)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.addWidget(fila_copiable("Referencia catastral:", datos["refcat"]))
+        poligono_parcela = formato_poligono_parcela(datos["refcat"])
+        if poligono_parcela:
+            layout.addWidget(fila_copiable("Polígono/parcela:", poligono_parcela))
         if resumen:
-            self.iface.messageBar().pushInfo("Catastrofe", resumen)
+            layout.addWidget(QLabel(resumen))
+        self.iface.messageBar().pushWidget(contenedor, level=Qgis.MessageLevel.Info)

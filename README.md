@@ -25,6 +25,9 @@ No depende de tener cargada ninguna capa de parcelas: usa directamente el
    consulta con la referencia completa (20 caracteres) de la primera
    unidad, que sí los da.
 4. Abre esa URL en una pestaña nueva del navegador por defecto.
+5. Muestra en la barra de mensajes de QGIS la referencia catastral (y, si la
+   parcela es rústica, también el polígono/parcela en formato `polígono-parcela`,
+   p.ej. `1-10`), cada uno con un botón para copiarlo al portapapeles.
 
 Si el punto pulsado cae en la calle o fuera de una parcela, el Catastro
 devuelve un error ("para esas coordenadas no hay referencia disponible")
@@ -44,7 +47,9 @@ principal (vía el WFS INSPIRE de parcelas catastrales del propio Catastro) y
 hace zoom hasta ella; si ese contorno no está disponible, marca al menos su
 centro. Activa además la misma herramienta de clic de siempre, así que desde
 ahí basta con pulsar sobre la parcela marcada para abrir su ficha en el
-navegador.
+navegador. El panel también muestra la referencia catastral encontrada (y el
+polígono/parcela si es rústica), con botón de copiar al portapapeles junto a
+cada una.
 
 **Datos ambientales (opcionales):** al pulsar sobre una parcela (o al
 marcarla desde el panel de búsqueda) también se consulta, para ese mismo
