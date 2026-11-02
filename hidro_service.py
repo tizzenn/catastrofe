@@ -7,6 +7,7 @@ son los datos que España reporta consolidados a la UE.
 Catálogo de capas: https://www.miteco.gob.es/es/cartografia-y-sig/ide/directorio_datos_servicios/agua/wms-inspire-agua.html
 """
 import json
+from concurrent.futures import ThreadPoolExecutor
 import urllib.parse
 import urllib.request
 
@@ -68,4 +69,8 @@ def acuifero_en_punto(lon: float, lat: float, fetch=_fetch):
 
 def zonas_inundables_en_punto(lon: float, lat: float, fetch=_fetch) -> list:
     """Descripciones de las zonas inundables/DPH que afectan a ese punto (lista vacía si ninguna)."""
-    return [etiqueta for tipo, etiqueta in CAPAS_ZONA_INUNDABLE if _get_feature(tipo, lon, lat, fetch=fetch)]
+    # Cinco capas independientes: se consultan en paralelo para que la espera
+    # sea la de la más lenta y no la suma de todas.
+    with ThreadPoolExecutor(max_workers=len(CAPAS_ZONA_INUNDABLE)) as pool:
+        hay = list(pool.map(lambda capa: bool(_get_feature(capa[0], lon, lat, fetch=fetch)), CAPAS_ZONA_INUNDABLE))
+    return [etiqueta for (_, etiqueta), afecta in zip(CAPAS_ZONA_INUNDABLE, hay) if afecta]

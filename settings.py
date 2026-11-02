@@ -5,6 +5,10 @@ CLAVE_ACUIFERO = "Catastrofe/mostrar_acuifero"
 CLAVE_ZONA_INUNDABLE = "Catastrofe/mostrar_zona_inundable"
 CLAVE_RED_NATURA = "Catastrofe/mostrar_red_natura"
 
+CLAVE_HUSO_UTM = "Catastrofe/huso_utm"
+HUSOS_UTM_VALIDOS = (28, 29, 30, 31)
+POR_DEFECTO_HUSO_UTM = 29
+
 CLAVE_BORDE_COLOR = "Catastrofe/borde_color"
 CLAVE_BORDE_ANCHO = "Catastrofe/borde_ancho"
 CLAVE_RELLENO_ACTIVADO = "Catastrofe/relleno_activado"
@@ -81,3 +85,14 @@ def opacidad_relleno() -> int:
 
 def set_opacidad_relleno(valor: int) -> None:
     QgsSettings().setValue(CLAVE_RELLENO_OPACIDAD, valor)
+
+
+def huso_utm() -> int:
+    """Huso UTM ETRS89 predeterminado para la búsqueda por coordenadas (28-31)."""
+    valor = QgsSettings().value(CLAVE_HUSO_UTM, POR_DEFECTO_HUSO_UTM, type=int)
+    return valor if valor in HUSOS_UTM_VALIDOS else POR_DEFECTO_HUSO_UTM
+
+
+def set_huso_utm(valor: int) -> None:
+    if valor in HUSOS_UTM_VALIDOS:
+        QgsSettings().setValue(CLAVE_HUSO_UTM, valor)

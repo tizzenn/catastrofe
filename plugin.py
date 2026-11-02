@@ -2,23 +2,26 @@ import os
 
 from qgis.PyQt.QtCore import Qt
 from qgis.PyQt.QtGui import QIcon
-from qgis.PyQt.QtWidgets import QAction, QMenu
+from qgis.PyQt.QtWidgets import QAction
 
 from .ajustes_dialog import AjustesDialog
 from .catastro_maptool import CatastroClickTool
 from .panel import CatastrofePanel
 
 
+MENU_NOMBRE = "Catastrofe"
+
+
 class CatastrofePlugin:
     def __init__(self, iface):
         self.iface = iface
-        self.menu = None
         self.action = None
         self.map_tool = None
         self.previous_tool = None
         self.panel = None
         self.panel_action = None
         self.ajustes_dialog = None
+        self.accion_ajustes = None
 
     def initGui(self):
         icon_path = os.path.join(os.path.dirname(__file__), "icon.svg")
@@ -43,19 +46,17 @@ class CatastrofePlugin:
         self.accion_ajustes = QAction("Ajustes…", self.iface.mainWindow())
         self.accion_ajustes.triggered.connect(self.abrir_ajustes)
 
-        self.menu = QMenu("Catastrofe", self.iface.mainWindow())
-        self.menu.addAction(self.action)
-        self.menu.addAction(self.panel_action)
-        self.menu.addAction(self.accion_ajustes)
-        self.iface.pluginMenu().addMenu(self.menu)
+        for accion in (self.action, self.panel_action, self.accion_ajustes):
+            self.iface.addPluginToWebMenu(MENU_NOMBRE, accion)
 
-        self.map_tool = CatastroClickTool(self.iface.mapCanvas(), self.iface)
+        self.map_tool = CatastroClickTool(self.iface.mapCanvas(), self.iface, self.panel)
         self.map_tool.setAction(self.action)
         self.iface.mapCanvas().mapToolSet.connect(self.on_map_tool_changed)
 
     def unload(self):
         self.iface.mapCanvas().mapToolSet.disconnect(self.on_map_tool_changed)
-        self.iface.pluginMenu().removeAction(self.menu.menuAction())
+        for accion in (self.action, self.panel_action, self.accion_ajustes):
+            self.iface.removePluginWebMenu(MENU_NOMBRE, accion)
         self.iface.removeToolBarIcon(self.action)
         self.iface.removeToolBarIcon(self.panel_action)
         self.panel.limpiar_marca()
@@ -67,8 +68,7 @@ class CatastrofePlugin:
             self.ajustes_dialog.close()
             self.ajustes_dialog.deleteLater()
             self.ajustes_dialog = None
-        self.menu.deleteLater()
-        self.menu = None
+        self.accion_ajustes = None
         self.map_tool = None
         self.action = None
 
