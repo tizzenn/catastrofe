@@ -11,6 +11,7 @@ from catastro_service import (
     datos_ficha,
     formato_poligono_parcela,
     naturaleza_parcela,
+    naturaleza_por_formato,
     normalizar_referencia,
     refcats_en_poligono_parcela,
     url_sedecatastro_para_punto,
@@ -106,6 +107,12 @@ def main():
         resultado = formato_poligono_parcela(refcat)
         ok = resultado == esperado
         print(f"[{'OK' if ok else 'FALLO'}] {descripcion}: {resultado!r}")
+        fallos += 0 if ok else 1
+
+    for refcat, esperado in (("46138A00100010", "Rústica"), ("0443104VK4704C", "Urbana"), ("123", None)):
+        resultado = naturaleza_por_formato(refcat)
+        ok = resultado == esperado
+        print(f"[{'OK' if ok else 'FALLO'}] naturaleza por formato {refcat}: {resultado!r}")
         fallos += 0 if ok else 1
 
     if fallos:
