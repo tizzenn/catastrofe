@@ -33,6 +33,7 @@ from .catastro_service import (
     CatastroLookupError,
     formato_poligono_parcela,
     geometria_parcela,
+    naturaleza_por_formato,
     naturaleza_y_referencia_completa,
     normalizar_referencia,
     punto_de_referencia,
@@ -54,6 +55,13 @@ except AttributeError:  # QGIS 3.28
 
     TIPO_POLIGONO = QgsWkbTypes.PolygonGeometry
     TIPO_PUNTO = QgsWkbTypes.PointGeometry
+
+
+# Indicio orientativo a partir de la naturaleza catastral; no es la clasificación del planeamiento.
+INDICIO_SUELO = {
+    "Urbana": "Suelo (indicio según Catastro): urbano",
+    "Rústica": "Suelo (indicio según Catastro): no urbano",
+}
 
 
 def _icono_circulo():
@@ -311,6 +319,7 @@ class CatastrofePanel(QDockWidget):
             "refcat": refcat,
             "refcat_completa": datos_refcat.get("refcat_completa") or refcat,
             "poligono_parcela": formato_poligono_parcela(refcat),
+            "naturaleza": datos_refcat.get("naturaleza") or naturaleza_por_formato(refcat),
             "url": url,
             "ambiental": ambiental,
             "banda": banda,
@@ -377,8 +386,9 @@ class CatastrofePanel(QDockWidget):
         if banda is None:
             return
         try:
+            # QgsRubberBand es un elemento gráfico (no un QObject): basta con
+            # sacarlo de la escena y soltar la referencia.
             self.iface.mapCanvas().scene().removeItem(banda)
-            banda.deleteLater()
         except RuntimeError:
             pass
         registro["banda"] = None
@@ -413,6 +423,15 @@ class CatastrofePanel(QDockWidget):
             cabecera.addWidget(quitar)
             tarjeta_layout.addLayout(cabecera)
 
+            indicio = INDICIO_SUELO.get(registro.get("naturaleza"))
+            if indicio:
+                etiqueta_suelo = QLabel(indicio)
+                etiqueta_suelo.setWordWrap(True)
+                etiqueta_suelo.setToolTip(
+                    "Es la naturaleza catastral (Urbana/Rústica), no la clasificación urbanística "
+                    "del planeamiento. Puede no coincidir, p. ej. en núcleos rurales. Confirma en el planeamiento municipal."
+                )
+                tarjeta_layout.addWidget(etiqueta_suelo)
             tarjeta_layout.addWidget(fila_copiable("Referencia catastral:", registro["refcat_completa"]))
             if registro["poligono_parcela"]:
                 tarjeta_layout.addWidget(fila_copiable("Polígono-parcela:", registro["poligono_parcela"]))

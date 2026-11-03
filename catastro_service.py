@@ -167,6 +167,16 @@ def formato_poligono_parcela(refcat14: str):
     return f"{poligono}-{parcela}"
 
 
+def naturaleza_por_formato(refcat14: str):
+    """Deduce 'Rústica' o 'Urbana' solo por el formato de la referencia de 14
+    caracteres (misma regla que formato_poligono_parcela: la posición 6 es una
+    letra en las rústicas). Respaldo para cuando el Catastro no informa de la
+    naturaleza; el dato oficial de Consulta_DNPRC tiene siempre prioridad."""
+    if len(refcat14) != 14:
+        return None
+    return "Rústica" if refcat14[5].isalpha() else "Urbana"
+
+
 def _fetch_or_raise(url: str, fetch) -> bytes:
     try:
         return fetch(url)

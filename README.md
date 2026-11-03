@@ -12,7 +12,7 @@ El panel lateral incluye tres métodos de búsqueda:
 
 Se puede lanzar la búsqueda pulsando Intro en cualquier campo.
 
-En cada resultado se muestran la referencia catastral y, cuando es una parcela rústica, el identificador **polígono-parcela** (por ejemplo, `1-10`). Ambos datos tienen su propio botón de copiar. También hay un botón para abrir manualmente la ficha en la Sede del Catastro.
+En cada resultado se muestra un **indicio de suelo urbano / no urbano** (deducido de la naturaleza catastral Urbana/Rústica; **no es la clasificación del planeamiento** y puede no coincidir, p. ej. en núcleos rurales), la referencia catastral y, cuando es una parcela rústica, el identificador **polígono-parcela** (por ejemplo, `1-10`). Ambos datos tienen su propio botón de copiar. También hay un botón para abrir manualmente la ficha en la Sede del Catastro.
 
 ## Modo acumulativo y limpieza
 

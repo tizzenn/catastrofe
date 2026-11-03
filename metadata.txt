@@ -3,8 +3,10 @@ name=Catastrofe
 qgisMinimumVersion=3.28
 qgisMaximumVersion=4.99
 description=Search cadastral parcels by reference, rural polygon/parcel or ETRS89 UTM coordinates (zones 28-31); highlight one or several parcels and open their Cadastre records manually.
-version=0.6
-changelog=0.6 - Map click now feeds the results panel; remove single parcels; copy all references; scrollable panel; previous result is kept if a search fails.
+version=0.7.1
+changelog=0.7.1 - Fix: clearing and replacing highlighted parcels on the map.
+    0.7 - Each result shows an indicative urban / non-urban soil hint based on the cadastral nature.
+    0.6 - Map click now feeds the results panel; remove single parcels; copy all references; scrollable panel; previous result is kept if a search fails.
     0.5 - UTM zone is remembered between sessions (default 29N).
     0.4 - Environmental data (aquifer, flood zones, Natura 2000) in results; UTM zone selector (28N-31N); parallel flood-zone queries; QGIS 4 compatibility fixes; Web menu.
     0.3 - Multi-parcel accumulation, polygon/parcel search, copy buttons.
